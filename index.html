@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Celestial Map with D3.js</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://d3js.org/d3.geo.projection.v0.min.js"></script>
+    <script src="celestial.js"></script>
+    <link rel="stylesheet" href="celestial.css">
+</head>
+<body>
+    <div id="celestial-map"></div>
+    <div id="celestial-form"></div>
+
+    <script>
+        var config = { 
+            width: 0,           
+            projection: "aitoff",    
+            transform: "equatorial", 
+            center: null,       
+            datapath: "https://ofrohn.github.io/data/", // Add this line
+            background: {        
+                fill: "#000000",   
+                opacity: 1, 
+                stroke: "#000000", 
+                width: 1.5
+            },
+            stars: {
+                show: true,    
+                limit: 6,      
+                colors: true,  
+                style: { fill: "#ffffff", opacity: 1 }
+            },
+            dsos: {
+                show: true,    
+                limit: 6,      
+                colors: true,  
+                style: { fill: "#cccccc", stroke: "#cccccc", width: 2, opacity: 1 },
+                names: true
+            },
+            constellations: {
+                show: true,      
+                names: true,      
+                desig: true,     
+                lines: true,   
+                lineStyle: { stroke: "#cccccc", width: 1, opacity: 0.6 },
+                bounds: false, 
+                boundStyle: { stroke: "#cccc00", width: 0.5, opacity: 0.8, dash: [2, 4] }
+            },
+            mw: {
+                show: true,    
+                style: { fill: "#ffffff", opacity: 0.15 }
+            }
+        };
+
+        // Celestial.display(config);
+
+        var jsonLine = {
+            "type":"FeatureCollection",
+            "features":[
+                {"type":"Feature",
+                "id":"SummerTriangle",
+                "properties": {
+                    "n":"Summer Triangle",
+                    "loc": [-67.5, 52]
+                }, "geometry":{
+                    "type":"MultiLineString",
+                    "coordinates":[[
+                    [-80.7653, 38.7837],
+                    [-62.3042, 8.8683],
+                    [-49.642, 45.2803],
+                    [-80.7653, 38.7837]
+                    ]]
+                }
+                }  
+            ]
+        };
+
+        var lineStyle = { 
+            stroke: "#f00", 
+            fill: "rgba(255, 204, 204, 0.4)",
+            width: 3 
+        };
+        var textStyle = { 
+            fill: "#f00", 
+            font: "bold 15px Helvetica, Arial, sans-serif", 
+            align: "center", 
+            baseline: "bottom" 
+        };
+
+        Celestial.add({
+            type: "line",
+            callback: function(error, json) {
+                if (error) return console.warn(error);
+                var asterism = Celestial.getData(jsonLine, config.transform);
+
+                Celestial.container.selectAll(".asterisms")
+                    .data(asterism.features)
+                    .enter().append("path")
+                    .attr("class", "ast"); 
+                Celestial.redraw();
+            },
+            redraw: function() {   
+                Celestial.container.selectAll(".ast").each(function(d) {
+                    Celestial.setStyle(lineStyle);
+                    Celestial.map(d);
+                    Celestial.context.fill();
+                    Celestial.context.stroke();
+                    
+                    if (Celestial.clip(d.properties.loc)) {
+                        var pt = Celestial.mapProjection(d.properties.loc);
+                        Celestial.setTextStyle(textStyle);
+                        Celestial.context.fillText(d.properties.n, pt[0], pt[1]);
+                    }      
+                })
+            }
+        });
+
+        Celestial.display(config);
+    </script>
+</body>
+</html>
